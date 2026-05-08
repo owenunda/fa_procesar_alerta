@@ -1,31 +1,38 @@
-const { app } = require('@azure/functions');
+const { app, output } = require('@azure/functions');
+
+// 1. Definimos la salida hacia SignalR
+const signalR = output.generic({
+    type: 'signalR',
+    name: 'signalRMessages',
+    hubName: 'trafficHub',
+    connectionStringSetting: 'AzureSignalRConnectionString'
+});
 
 app.storageBlob('ProcesarAlerta', {
     path: 'alertas-trafico/{name}',
     connection: 'storetrafficosub_STORAGE',
+    extraOutputs: [signalR], // 2. Conectamos la salida
     handler: (blob, context) => {
         try {
             const data = JSON.parse(blob.toString());
+            
+            // Mapeamos los datos que vienen de tu simulador
+            const alertaInfo = {
+                sensor: data.sensorId || "Desconocido",
+                velocidad: data.velocidad || 0,
+                timestamp: data.timestamp || new Date().toISOString()
+            };
 
-            context.log(`-----------------------------------------`);
-            context.log(`ALERTA DETECTADA EN: ${context.triggerMetadata.name}`);
-            
-            // Usamos los nombres de campos que vienen de tu simulador/Stream Analytics
-            // Agregamos un fallback (||) por si Stream Analytics renombró los campos
-            const id = data.sensorId || data.deviceId || "ID Desconocido";
-            const vel = data.velocidad || data.averageSpeed || "N/A";
-            
-            context.log(`ID del Sensor: ${id}`);
-            context.log(`Velocidad: ${vel} km/h`);
-            
-            if (data.location) {
-                context.log(`Coordenadas: Lat ${data.location.lat}, Lng ${data.location.lng}`);
-            }
-            
-            context.log(`-----------------------------------------`);
+            context.log(`🚨 Enviando alerta a SignalR: Sensor ${alertaInfo.sensor}`);
+
+            // 3. Enviamos el mensaje al Dashboard
+            context.extraOutputs.set(signalR, [{
+                target: 'newMessage',
+                arguments: [alertaInfo]
+            }]);
 
         } catch (error) {
-            context.log.error("Error al procesar el JSON de la alerta:", error);
+            context.log.error("Error procesando alerta:", error);
         }
     }
 });
