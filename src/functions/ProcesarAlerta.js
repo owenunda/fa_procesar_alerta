@@ -12,26 +12,30 @@ app.storageBlob('ProcesarAlerta', {
     connection: 'storetrafficosub_STORAGE',
     extraOutputs: [signalR],
     handler: (blob, context) => {
-        try {
-            // El archivo tiene múltiples líneas JSON, tomamos la primera
-            const content = blob.toString().split('\n')[0];
-            const data = JSON.parse(content);
-            
-            const alertaInfo = {
-                sensor: data.sensorId || "Desconocido",
-                velocidad: data.velocidadPromedio || 0, // <--- CAMBIADO A velocidadPromedio
-                timestamp: data.tiempoAlerta || new Date().toISOString() // <--- CAMBIADO A tiempoAlerta
-            };
+try {
+        const content = blob.toString().trim();
+        // Si el archivo tiene múltiples líneas, las procesamos todas
+        const lines = content.split('\n');
+        
+        lines.forEach(line => {
+            if (line.trim()) {
+                const data = JSON.parse(line);
+                
+                const alertaInfo = {
+                    sensor: data.sensorId || "Sensor-TDeA",
+                    velocidad: data.velocidadPromedio || 0,
+                    timestamp: data.tiempoAlerta || new Date().toISOString()
+                };
 
-            context.log(`🚨 Enviando a SignalR: Sensor ${alertaInfo.sensor} - Vel: ${alertaInfo.velocidad}`);
+                context.log(`🚨 Alerta procesada: ${alertaInfo.sensor} a ${alertaInfo.velocidad}km/h`);
 
-            context.extraOutputs.set(signalR, [{
-                target: 'newMessage',
-                arguments: [alertaInfo]
-            }]);
-
-        } catch (error) {
-            context.log.error("Error procesando el JSON del blob:", error);
-        }
+                context.extraOutputs.set(signalR, [{
+                    target: 'newMessage',
+                    arguments: [alertaInfo]
+                }]);
+            }
+        });
+    } catch (error) {
+        context.log.error("Error detallado:", error);
     }
 });
