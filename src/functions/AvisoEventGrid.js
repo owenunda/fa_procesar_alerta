@@ -13,7 +13,7 @@ app.eventGrid('AvisoEventGrid', {
     handler: async (event, context) => {
         try {
             const blobUrl = event.data.url;
-            context.log(`🔔 Procesando actualización de: ${blobUrl}`);
+            context.log(`Procesando actualización de: ${blobUrl}`);
 
             // Conexión al Storage usando la variable de entorno que configuramos
             const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.storetrafficosub_STORAGE);
@@ -34,7 +34,7 @@ app.eventGrid('AvisoEventGrid', {
             // Separar por líneas y limpiar vacíos
             const lines = content.split('\n').filter(line => line.trim());
 
-            // --- LÓGICA REALISTA: SOLO LA ÚLTIMA ALERTA ---
+            // solo ultima alerta
             if (lines.length > 0) {
                 const lastLine = lines[lines.length - 1];
                 const data = JSON.parse(lastLine);
@@ -52,7 +52,7 @@ app.eventGrid('AvisoEventGrid', {
                 }];
 
                 context.extraOutputs.set(signalR, mensaje);
-                context.log(`✅ Alerta enviada: ${velocidadLimpia} km/h`);
+                context.log(`Alerta enviada: ${velocidadLimpia} km/h`);
             }
 
         } catch (error) {

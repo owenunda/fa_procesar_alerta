@@ -27,7 +27,7 @@ app.storageBlob('ProcesarAlerta', {
                         timestamp: data.tiempoAlerta || new Date().toISOString()
                     };
 
-                    context.log(`🚨 Alerta procesada: ${alertaInfo.sensor} a ${alertaInfo.velocidad}km/h`);
+                    context.log(`Alerta procesada: ${alertaInfo.sensor} a ${alertaInfo.velocidad}km/h`);
 
                     context.extraOutputs.set(signalR, [{
                         target: 'newMessage',
@@ -38,5 +38,5 @@ app.storageBlob('ProcesarAlerta', {
         } catch (error) {
             context.log.error("Error detallado:", error);
         }
-    } // <--- ¡ESTA ES LA LLAVE QUE FALTABA!
+    } 
 });

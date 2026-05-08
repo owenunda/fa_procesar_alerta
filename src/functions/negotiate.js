@@ -9,7 +9,7 @@ app.http('negotiate', {
         input.generic({
             type: 'signalRConnectionInfo',
             name: 'connectionInfo',
-            hubName: 'trafficHub', // Debe ser el mismo nombre que usaste en ProcesarAlerta.js
+            hubName: 'trafficHub',
             connectionStringSetting: 'AzureSignalRConnectionString'
         })
     ],
