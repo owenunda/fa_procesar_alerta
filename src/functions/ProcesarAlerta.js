@@ -1,6 +1,5 @@
 const { app, output } = require('@azure/functions');
 
-// 1. Definimos la salida hacia SignalR
 const signalR = output.generic({
     type: 'signalR',
     name: 'signalRMessages',
@@ -11,28 +10,28 @@ const signalR = output.generic({
 app.storageBlob('ProcesarAlerta', {
     path: 'alertas-trafico/{name}',
     connection: 'storetrafficosub_STORAGE',
-    extraOutputs: [signalR], // 2. Conectamos la salida
+    extraOutputs: [signalR],
     handler: (blob, context) => {
         try {
-            const data = JSON.parse(blob.toString());
+            // El archivo tiene múltiples líneas JSON, tomamos la primera
+            const content = blob.toString().split('\n')[0];
+            const data = JSON.parse(content);
             
-            // Mapeamos los datos que vienen de tu simulador
             const alertaInfo = {
                 sensor: data.sensorId || "Desconocido",
-                velocidad: data.velocidad || 0,
-                timestamp: data.timestamp || new Date().toISOString()
+                velocidad: data.velocidadPromedio || 0, // <--- CAMBIADO A velocidadPromedio
+                timestamp: data.tiempoAlerta || new Date().toISOString() // <--- CAMBIADO A tiempoAlerta
             };
 
-            context.log(`🚨 Enviando alerta a SignalR: Sensor ${alertaInfo.sensor}`);
+            context.log(`🚨 Enviando a SignalR: Sensor ${alertaInfo.sensor} - Vel: ${alertaInfo.velocidad}`);
 
-            // 3. Enviamos el mensaje al Dashboard
             context.extraOutputs.set(signalR, [{
                 target: 'newMessage',
                 arguments: [alertaInfo]
             }]);
 
         } catch (error) {
-            context.log.error("Error procesando alerta:", error);
+            context.log.error("Error procesando el JSON del blob:", error);
         }
     }
 });
