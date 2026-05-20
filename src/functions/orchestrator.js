@@ -1,15 +1,14 @@
 const { app } = require('@azure/functions');
 const df = require('durable-functions');
 
-// Cambiado de app.orchestration a df.app.orchestration
 df.app.orchestration('systemOrchestrator', function* (context) {
-    // 1. Ejecutar el encendido
+    // 1. Enciende Stream Analytics
     yield context.df.callActivity('toggleSystem', 'START');
 
-    // 2. Dormir exactamente 3 minutos
-    const deadline = new Date(context.df.currentUtcDateTime.getTime() + 3 * 60000);
-    yield context.df.createTimer(deadline);
+    // 2. Ejecuta el simulador inyectando datos por 3 minutos exactos
+    // El orquestador se quedará esperando aquí hasta que la actividad termine
+    yield context.df.callActivity('runSimulator', { durationMinutes: 3 });
 
-    // 3. Ejecutar el apagado
+    // 3. Apaga Stream Analytics al terminar
     yield context.df.callActivity('toggleSystem', 'STOP');
 });

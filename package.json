@@ -12,6 +12,8 @@
     "@azure/functions": "^4.0.0",
     "@azure/identity": "^4.13.1",
     "@azure/storage-blob": "^12.31.0",
+    "azure-iot-device": "^1.18.4",
+    "azure-iot-device-mqtt": "^1.16.4",
     "durable-functions": "^3.3.1"
   },
   "main": "src/{index.js,functions/*.js}"
